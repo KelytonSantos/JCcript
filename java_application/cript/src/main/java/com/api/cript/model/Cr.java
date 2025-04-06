@@ -1,5 +1,7 @@
 package com.api.cript.model;
 
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +16,7 @@ public class Cr {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", updatable = false, nullable = false, unique = true)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false, updatable = false)
     private String hash;
@@ -26,7 +28,7 @@ public class Cr {
         this.hash = hash;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
