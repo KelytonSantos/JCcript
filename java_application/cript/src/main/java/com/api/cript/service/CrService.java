@@ -14,7 +14,7 @@ public class CrService {
     private CrRepo repo;
 
     public Cr creatHash(CrDTO dto) {
-        Cr newHash = new Cr(dto.hash());
+        Cr newHash = new Cr(dto.hash(), dto.iv());
 
         return repo.save(newHash);
     }

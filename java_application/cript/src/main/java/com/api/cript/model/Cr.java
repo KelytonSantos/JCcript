@@ -21,11 +21,15 @@ public class Cr {
     @Column(nullable = false, updatable = false)
     private String hash;
 
+    @Column(nullable = false, updatable = false)
+    private String iv;
+
     public Cr() {
     }
 
-    public Cr(String hash) {
+    public Cr(String hash, String iv) {
         this.hash = hash;
+        this.iv = iv;
     }
 
     public UUID getId() {
@@ -36,7 +40,15 @@ public class Cr {
         return hash;
     }
 
+    public String getIv() {
+        return iv;
+    }
+
     public void setHash(String hash) {
         this.hash = hash;
+    }
+
+    public void setIv(String iv) {
+        this.iv = iv;
     }
 }

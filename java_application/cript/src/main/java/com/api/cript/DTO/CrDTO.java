@@ -1,5 +1,5 @@
 package com.api.cript.DTO;
 
-public record CrDTO(String hash) {
+public record CrDTO(String hash, String iv) {
 
 }
