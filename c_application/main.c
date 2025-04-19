@@ -53,6 +53,7 @@ void enF(const char *filename, const unsigned char *key, const unsigned char *iv
     }
 
     char encryptedFile[256];
+
     snprintf(encryptedFile, sizeof(encryptedFile), "%s.locked", filename); // pega o nome do arquivo e acrescenta um .locked
 
     FILE *output = fopen(encryptedFile, "wb"); // abre o arquivo com permissao de escrita(em binario)
