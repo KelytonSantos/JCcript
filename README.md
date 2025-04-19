@@ -91,7 +91,8 @@ A criptografia se dividi em dois grupos (os principais) e uma função de hash c
     🔐 Simétrica
 
     Quando a mesma chave é utilizada tanto para criptografar quanto para descriptografar
-    Nesse tipo de criptografia, as duas partes precisam saber da chave secreta. O texto simples é transformado em uma versão codificada (texto cifrado) e apenas quem tem a chave e sabe o tipo de algoritmo utilizado consegue descriptografar.
+    Nesse tipo de criptografia, as duas partes precisam saber da chave secreta.
+    O texto simples é transformado em uma versão codificada (texto cifrado) e apenas quem tem a chave e sabe o tipo de algoritmo utilizado consegue descriptografar.
 
     - AES (Advanced Encryption Standard) – o mais usado hoje, seguro e rápido.
 
@@ -105,7 +106,10 @@ A criptografia se dividi em dois grupos (os principais) e uma função de hash c
 
     🔓 Assimétrica
 
-    Na criptografia assimétrica utiliza-se duas chaves, uma publica e uma privada. A chave publica pode ser distribuída livremente enquanto que a chave privada deve ser mantida em segredo. A chave pública serve para criptografar os dados enquanto que a chave privada tem o papel de descriptografar. Nesse tipo de criptografia sempre se gera um par de chaves que são relacionadas matematicamente mas que uma não pode ser calculada a partir da outra, além disso uma vez criptografado com a chave pública apenas quem detem a chave privada consegue visualizar a mensagem original.
+    Na criptografia assimétrica utiliza-se duas chaves, uma publica e uma privada.
+
+    A chave publica pode ser distribuída livremente enquanto que a chave privada deve ser mantida em segredo. A chave pública serve para criptografar os dados enquanto que a chave privada tem o papel de descriptografar.
+    Nesse tipo de criptografia sempre se gera um par de chaves que são relacionadas matematicamente mas que uma não pode ser calculada a partir da outra, além disso uma vez criptografado com a chave pública apenas quem detem a chave privada consegue visualizar a mensagem original.
 
     - RSA – Algoritmo tradicional baseado na fatoração de números grades
 
@@ -172,4 +176,9 @@ No nosso programa, utilizamos o algoritmo de criptografia simétrica AES de 256 
 
 ```
 
-Quando escrevemos `EVP_CIPHER_CTX *ctx` estamos criando um contexto do tipo EVP_CIPHER_CTX que é um struct e representa o necessário que a biblioteca Openssl precisa saber. É com ele que vamos montar toda a criptografia. `EVP_CIPHER_CTX_new();`
+Quando escrevemos `EVP_CIPHER_CTX *ctx` estamos criando um contexto do tipo EVP_CIPHER_CTX que é um struct e representa o necessário que a biblioteca Openssl precisa saber. É com ele que vamos montar toda a criptografia.
+
+A partir do momento que atribuímos ao ponteiro a função `EVP_CIPHER_CTX_new();` estamos necessariamente alocando memória (dinâmica) na nossa heap, nesse local será armazenado o algoritmo usado, a chave, o IV, os dados intermediários, etc.
+
+`   EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);`
+Nessa Linha ocorre a inicialização do contexto, no primeiro parâmetro passamos o contexto criado, no segundo parâmetro passamos o algoritmo e o modo, o quarto parâmetro é a entrada para uma engine específica no qual permitira utilizar implementações dos algoritmos, ou seja, se tivermos bibliotecas de terceiros (como bibliotecas de criptografia de fabricantes ou certificada por alguma autoridade) ou dispositivos físicos(como um HSM) passamos aqui, no quinto parâmetro passamos o ponteiro para a chave secreta, e no quinto parâmetro é o nosso vetor de inicialização.
