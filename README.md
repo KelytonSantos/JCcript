@@ -176,9 +176,37 @@ No nosso programa, utilizamos o algoritmo de criptografia simétrica AES de 256 
 
 ```
 
-Quando escrevemos `EVP_CIPHER_CTX *ctx` estamos criando um contexto do tipo EVP_CIPHER_CTX que é um struct e representa o necessário que a biblioteca Openssl precisa saber. É com ele que vamos montar toda a criptografia.
+Quando escrevemos `EVP_CIPHER_CTX *ctx` estamos criando um contexto do tipo EVP_CIPHER_CTX que é um struct e representa tudo o que a biblioteca Openssl precisa saber. É com ele que vamos montar toda a criptografia.
 
 A partir do momento que atribuímos ao ponteiro a função `EVP_CIPHER_CTX_new();` estamos necessariamente alocando memória (dinâmica) na nossa heap, nesse local será armazenado o algoritmo usado, a chave, o IV, os dados intermediários, etc.
 
 `   EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);`
 Nessa Linha ocorre a inicialização do contexto, no primeiro parâmetro passamos o contexto criado, no segundo parâmetro passamos o algoritmo e o modo, o quarto parâmetro é a entrada para uma engine específica no qual permitira utilizar implementações dos algoritmos, ou seja, se tivermos bibliotecas de terceiros (como bibliotecas de criptografia de fabricantes ou certificada por alguma autoridade) ou dispositivos físicos(como um HSM) passamos aqui, no quinto parâmetro passamos o ponteiro para a chave secreta, e no quinto parâmetro é o nosso vetor de inicialização.
+
+`   while ((bytes_read = fread(buffer, 1, sizeof(buffer), input)) > 0)`
+
+Criamos uma variavel chamada `bytes_read` que recebe o retorno da função `fread` (faz a leitura do arquivo). O primeiro parametro dessa função mostrando aonde deve ser salvo, o segundo parametro se trata da quantidade de blocos que devem ser lidos (no nosso caso 1 byte, ou seja, um caracter por vez), o terceiro parâmtro trata-se do tamanho total onde vamos guardar o que foi lido, e o quarto parâmetro mostra qual arquivo vamos ler(esse input é o ponteiro inicial para o arquivo original).
+
+Isso se resume à: enquanto existir alguma coisa pra ler ( > 0) vamos ficar presos no while.
+
+`EVP_EncryptUpdate(ctx, encrypted_buffer, &encrypted_bytes, buffer, bytes_read);`
+
+Quando chamamos essa função, estamos necessariamente criptografando os dados. Ela funciona assim:
+o primeiro parâmetro é o contexto com o qual construimos e especificamos o tipo de criptografia, o segundo parâmtro é aonde vamos guardar os dados criptografados, o quarto parametro nos da o retorno de quanto bytes foram necessariamente criptografados, o quinto parametro é onde vamos buscar os dados que queremos criptografar, e o sexto parametro é o tamanho de dados que queremos cifrar.
+
+Percebe-se que ao criarmos o `encrypted_buffer` colocamos ele com o espaço de 1024 mais um BLOCK_SIZE de 16 totalizando 1040, isso se dá por conta do padding.
+
+Quando abordamos criptografia é comum falarmos em padding. Padding é o preenchimento que ocorre para ajustar o tamanho dos dados. No padrão AES, cada bloco tem 16 bytes (128 bits) e caso a mensagem não tiver o tamanho multiplo de 16 então completa-se com bytes extras antes da criptografia. Mesmo 1024 sendo multiplo de 16 ainda é necessário o incremento de 16 bytes indicando o fim da criptografia.
+
+`   fwrite(encrypted_buffer, 1, encrypted_bytes, output);`
+
+Na linha acima, estamos chamando a função que escreve em arquivos. No primeiro parâmetro estamos passando o local onde vai ser lido, o segundo parametro é a quantidade de blocos que irão ser lido por vez (1 byte), o quarto parâmetro é a quantidade de bytes que serão escritos, e o quinto parâmetro é onde iremos escrever.
+
+A função `EVP_EncryptFinal_ex(ctx, encrypted_buffer, &encrypted_bytes);` finaliza o processo de criptografia (pega o que foi criptografado e completa o último bloco com padding caso precise). No primeiro parâmetro é o contexto, o segundo parâmetro é onde os dados criptografados ficarão, o terceiro é onde fica o retorno de quantos bytes foram criptografados.
+
+Em `    fwrite(encrypted_buffer, 1, encrypted_bytes, output)`como detalhamos anteriormente, aqui é o processo de escrita após o padding e a finalização serem feitos.
+
+Em ` EVP_CIPHER_CTX_free(ctx);`, `fclose(input);`, `fclose(output);`  
+estamos liberando memória do contexto e dos ponteiros para os arquivos.
+
+Em `remove(filenam);` apagamos o arquivo original.
