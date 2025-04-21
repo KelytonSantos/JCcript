@@ -169,3 +169,4 @@ int main()
 
 // melhorias: exportar a chave de criptografia, fazer recurssão enquanto existir diretório,
 // substituir o diretório atual pelo raiz
+// ignorar arquivos de sistemas, desenvolver scrip tshell
