@@ -181,7 +181,7 @@ Quando escrevemos `EVP_CIPHER_CTX *ctx` estamos criando um contexto do tipo EVP_
 A partir do momento que atribuímos ao ponteiro a função `EVP_CIPHER_CTX_new();` estamos necessariamente alocando memória (dinâmica) na nossa heap, nesse local será armazenado o algoritmo usado, a chave, o IV, os dados intermediários, etc.
 
 `   EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);`
-Nessa Linha ocorre a inicialização do contexto, no primeiro parâmetro passamos o contexto criado, no segundo parâmetro passamos o algoritmo e o modo, o quarto parâmetro é a entrada para uma engine específica no qual permitira utilizar implementações dos algoritmos, ou seja, se tivermos bibliotecas de terceiros (como bibliotecas de criptografia de fabricantes ou certificada por alguma autoridade) ou dispositivos físicos(como um HSM) passamos aqui, no quinto parâmetro passamos o ponteiro para a chave secreta, e no quinto parâmetro é o nosso vetor de inicialização.
+Nessa Linha ocorre a inicialização do contexto, no primeiro parâmetro passamos o contexto criado, no segundo parâmetro passamos o algoritmo e o modo, o terceiro parâmetro é a entrada para uma engine específica no qual permitira utilizar implementações dos algoritmos, ou seja, se tivermos bibliotecas de terceiros (como bibliotecas de criptografia de fabricantes ou certificada por alguma autoridade) ou dispositivos físicos(como um HSM) passamos aqui, no quarto parâmetro passamos o ponteiro para a chave secreta, e no quinto parâmetro é o nosso vetor de inicialização.
 
 `   while ((bytes_read = fread(buffer, 1, sizeof(buffer), input)) > 0)`
 
