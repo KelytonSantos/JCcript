@@ -6,3 +6,11 @@ seed: bm90bm90cGV0eWE=
 notnotpetya
 
 implementar dga no c2 e descriptografar tanto o AES quanto criar um programa pra descriptografar todos os arquivos
+atualizar para n criptografar a propria pasta e pastas e arquivos do sistema
+remover seeds e strings hardcodes
+resolver mecanismo de persistencia
+resolver para n quebrar a recursao de pasta (implementação de threads talvez?)
+resolver para https
+esconder da tabela de processos
+fechar quando estiver em aplicações de debug
+resolver para extração de dados
