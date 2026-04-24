@@ -1,1 +1,8 @@
 gcc main.c -o locker -lssl -lcrypto -lcurl
+
+gcc programa.c -o programa -lcrypto
+
+seed: bm90bm90cGV0eWE=
+notnotpetya
+
+implementar dga no c2 e descriptografar tanto o AES quanto criar um programa pra descriptografar todos os arquivos

